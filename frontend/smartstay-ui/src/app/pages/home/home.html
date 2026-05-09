@@ -1,67 +1,4 @@
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark smartstay-navbar px-3 px-lg-4">
-  <div class="container">
-    <a class="navbar-brand fw-bold fs-3" href="#">SmartStay</a>
 
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#mainNavbar"
-      aria-controls="mainNavbar"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="mainNavbar">
-      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            routerLink="/"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
-            > 
-            Home
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-          class="nav-link"
-          routerLink="/hotels"
-          routerLinkActive="active"
-          >
-          Hotels
-        </a></li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            routerLink="/offers"
-            routerLinkActive="active"
-            >
-            Offers
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" routerLink="/my-bookings">
-            My Bookings
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled">About</a>
-        </li>
-        <li class="nav-item">
-          <a class="btn btn-outline-light" routerLink="/login">Login</a>
-        </li>
-        <li class="nav-item">
-          <a class="btn btn-light ms-2" routerLink="/register">Register</a>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
 
 <!-- Hero -->
 <section class="hero-section">
@@ -75,7 +12,9 @@
       </p>
 
       <div class="hero-actions d-flex justify-content-center flex-wrap gap-3 mb-5">
-        <a href="#" class="btn btn-warning btn-lg text-dark fw-semibold px-4">Explore Hotels</a>
+        <a routerLink="/hotels" class="btn btn-warning btn-lg text-dark fw-semibold px-4">
+  Explore Hotels
+</a>
         <a href="#" class="btn btn-outline-light btn-lg px-4">View Offers</a>
       </div>
     </div>
@@ -153,7 +92,9 @@
             </p>
             <div class="d-flex justify-content-between align-items-center mt-3">
               <span class="fw-bold text-primary">₹6,500 / night</span>
-              <a href="#" class="btn btn-outline-dark btn-sm">View Details</a>
+              <a [routerLink]="['/rooms', 1]" class="btn btn-outline-dark btn-sm">
+  View Details
+</a>
             </div>
           </div>
         </div>

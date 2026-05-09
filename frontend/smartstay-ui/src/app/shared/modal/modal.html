@@ -1,0 +1,33 @@
+<div *ngIf="show" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <h4 class="mb-3">{{ title }}</h4>
+
+    <p>{{ message }}</p>
+
+    <div class="mt-4 text-end">
+
+      <!-- confirm modal -->
+      <button *ngIf="type === 'confirm'"
+              class="btn btn-secondary me-2"
+              (click)="close()">
+        Cancel
+      </button>
+
+      <button class="btn"
+              [ngClass]="{
+                'btn-success': type === 'success',
+                'btn-danger': type === 'error',
+                'btn-primary': type === 'confirm'
+              }"
+              (click)="type === 'confirm' ? confirm() : close()">
+
+        {{ type === 'confirm' ? 'Yes' : 'OK' }}
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

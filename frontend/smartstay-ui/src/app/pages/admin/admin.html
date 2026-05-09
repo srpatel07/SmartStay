@@ -1,0 +1,142 @@
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">Admin Dashboard</h2>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm">
+                <h5>Total Hotels</h5>
+                <h3>{{ totalHotels }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm">
+                <h5>Total Rooms</h5>
+                <h3>{{ totalRooms }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm">
+                <h5>Total Bookings</h5>
+                <h3>{{ totalBookings }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm">
+                <h5>Total Revenue</h5>
+                <h3>₹{{ totalRevenue }}</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mt-5">
+        <h4 class="mb-3">Quick Actions</h4>
+
+        <button class="btn btn-dark me-2">Add Hotel</button>
+        <button class="btn btn-outline-dark me-2">Manage Rooms</button>
+        <button class="btn btn-outline-dark">View Bookings</button>
+    </div>
+
+    <div class="mt-5">
+        <h4 class="mb-3">All Bookings</h4>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Guest</th>
+                        <th>Email</th>
+                        <th>Hotel</th>
+                        <th>Room</th>
+                        <th>Dates</th>
+                        <th>Booking Status</th>
+                        <th>Booking Action</th>
+                        <th>Payment Status</th>
+                        <th>Payment Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr *ngFor="let b of bookings">
+                        <td>{{ b.guestName }}</td>
+                        <td>{{ b.guestEmail }}</td>
+                        <td>{{ b.hotelName }}</td>
+                        <td>{{ b.roomType }}</td>
+
+                        <td>
+                            {{ b.checkInDate | date:'shortDate' }}
+                            →
+                            {{ b.checkOutDate | date:'shortDate' }}
+                        </td>
+
+                        <!-- BOOKING STATUS -->
+                        <td>
+                            <span class="badge" [ngClass]="{
+    'bg-success': b.bookingStatus === 'Confirmed',
+    'bg-warning text-dark': b.bookingStatus === 'Pending',
+    'bg-danger': b.bookingStatus === 'Cancelled',
+    'bg-primary': b.bookingStatus === 'Completed'
+  }">
+                                {{ b.bookingStatus }}
+                            </span>
+                        </td>
+
+                        <!-- BOOKING ACTION -->
+                        <td>
+
+                            <button class="btn btn-sm btn-success me-2"
+                                *ngIf="b.bookingStatus !== 'Cancelled' && b.bookingStatus !== 'Completed'"
+                                [disabled]="b.bookingStatus === 'Confirmed' || updatingId === b.bookingId"
+                                (click)="updateStatus(b.bookingId, 'Confirmed')">
+                                Confirm
+                            </button>
+
+                            <button class="btn btn-sm btn-danger" *ngIf="b.bookingStatus !== 'Cancelled'"
+                                [disabled]="updatingId === b.bookingId"
+                                (click)="updateStatus(b.bookingId, 'Cancelled')">
+                                Cancel
+                            </button>
+
+                        </td>
+
+                        <!-- PAYMENT STATUS -->
+                        <td>
+                            <span class="badge" [ngClass]="{
+                                'bg-success': b.paymentStatus === 'Paid',
+                                'bg-warning text-dark': b.paymentStatus === 'Pending',
+                                'bg-info text-dark': b.paymentStatus === 'Refunded'
+                                }">
+                                {{ b.paymentStatus }}
+                            </span>
+                        </td>
+
+                        <!-- PAYMENT ACTION -->
+                        <td>
+                            <select class="form-select form-select-sm" [disabled]="updatingId === b.bookingId"
+                                (change)="updatePayment(b.bookingId, $any($event.target).value)">
+
+                                <option value="">Update</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Refunded">Refunded</option>
+
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="bookings.length === 0">
+                        <td colspan="6" class="text-center">No bookings found</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>

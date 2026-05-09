@@ -4,12 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.html',
+  styleUrls: ['./login.css']
 })
 export class Login {
 
@@ -23,60 +25,80 @@ export class Login {
 
   loading = false;
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
+  ) { }
 
   login() {
 
-  this.errorMessage = '';
-  this.successMessage = '';
-  this.loading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.loading = true;
 
-  const data = {
-    email: this.email,
-    password: this.password
-  };
+    const data = {
+      email: this.email,
+      password: this.password
+    };
 
-  // validations
-  if (!this.email || !this.password) {
-    this.loading = false;
-    this.errorMessage = "Email and password are required";
-    return;
+    // validations
+    if (!this.email || !this.password) {
+      this.loading = false;
+      this.errorMessage = "Email and password are required";
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(this.email)) {
+      this.loading = false;
+      this.errorMessage = "Enter a valid email address";
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.password.length < 8) {
+      this.loading = false;
+      this.errorMessage = "Password must be at least 8 characters";
+      return;
+    }
+
+    this.http.post('https://localhost:7094/api/auth/login', data)
+      .subscribe({
+        next: (res: any) => {
+          this.authService.setToken(res.data.token);
+
+          const role = this.authService.getUserRole();
+
+          this.loading = false;
+          this.successMessage = "Login Successful!";
+          this.cdr.detectChanges();
+
+          // redirect based on role
+          setTimeout(() => {
+            if (role === 'Admin') {
+              window.location.href = '/admin';
+            } else {
+              window.location.href = '/hotels';
+            }
+          }, 800);
+        },
+        error: (err) => {
+          this.loading = false;
+
+          this.errorMessage =
+            err.error?.data?.message ||
+            err.error?.message ||
+            "Invalid email or password";
+
+          this.cdr.detectChanges(); // force UI refresh
+        }
+      });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(this.email)) {
-    this.loading = false;
-    this.errorMessage = "Enter a valid email address";
-    this.cdr.detectChanges();
-    return;
+  logout() {
+    this.authService.logout();
+    console.log('Token after logout:', localStorage.getItem('token')); // debug
   }
-
-  if (this.password.length < 8) {
-    this.loading = false;
-    this.errorMessage = "Password must be at least 8 characters";
-    return;
-  }
-
-  this.http.post('https://localhost:7094/api/auth/login', data)
-    .subscribe({
-      next: (res: any) => {
-        localStorage.setItem('token', res.data.token);
-
-        this.loading = false;
-        this.successMessage = "Login Successful!";
-        this.cdr.detectChanges(); // force UI refresh
-      },
-      error: (err) => {
-        this.loading = false;
-
-        this.errorMessage =
-          err.error?.data?.message ||
-          err.error?.message ||
-          "Invalid email or password";
-
-        this.cdr.detectChanges(); // force UI refresh
-      }
-    });
-}
 }

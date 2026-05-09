@@ -7,28 +7,54 @@
   </div>
 
   <!-- DATA -->
-  <div class="row g-4" *ngIf="!loading">
+  <div class="row g-4" *ngIf="!loading && rooms.length > 0">
     <div class="col-md-6 col-lg-4" *ngFor="let room of rooms">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold">{{ room.roomType }}</h5>
-          <p class="text-muted">₹{{ room.pricePerNight }} / night</p>
+      <div class="room-card">
 
-          <p>
-            Adults: {{ room.maxAdults }} |
-            Children: {{ room.maxChildren }}
+        <!-- Image -->
+        <div class="room-img-wrapper">
+          <img [src]="room.thumbnailImageUrl 
+              ? 'https://localhost:7094/' + room.thumbnailImageUrl 
+              : 'https://source.unsplash.com/400x300/?hotel-room'" alt="room image">
+
+          <!-- Price badge -->
+          <div class="price-badge">
+            ₹{{ room.pricePerNight }}/night
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="room-body">
+          <hr class="my-2">
+
+          <!-- Title -->
+          <h5 class="room-title">
+            {{ room.roomType }}
+          </h5>
+
+          <!-- Capacity -->
+          <p class="room-capacity">
+            👥 {{ room.maxAdults }} Adults • {{ room.maxChildren }} Children
           </p>
 
-          <p>
-            Available: {{ room.availableRooms }}
-          </p>
+          <!-- Availability -->
+          <div class="availability mb-2">
+            <span class="badge" [ngClass]="{
+                'bg-success': room.availableRooms > 5,
+                'bg-warning text-dark': room.availableRooms <= 5 && room.availableRooms > 0,
+                'bg-danger': room.availableRooms === 0
+              }">
+              {{ room.availableRooms === 0
+              ? 'Sold Out'
+              : room.availableRooms + ' rooms left' }}
+            </span>
+          </div>
 
-        <a
-            class="btn btn-dark btn-sm"
-            [routerLink]="['/booking', room.roomId]"
-        >
+          <!-- Button -->
+          <button class="btn book-btn" [routerLink]="['/booking', room.roomId]" [queryParams]="{ hotelId: hotelId }"
+            [disabled]="room.availableRooms === 0">
             Book Now
-        </a>
+          </button>
         </div>
       </div>
     </div>

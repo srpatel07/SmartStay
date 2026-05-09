@@ -23,19 +23,41 @@ export class Rooms implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.hotelId = Number(this.route.snapshot.paramMap.get('hotelId'));
 
-    this.roomService.getRoomsByHotel(this.hotelId).subscribe({
-      next: (res: any) => {
-        this.rooms = res || [];
+    this.loading = true;
+
+    this.route.paramMap.subscribe(params => {
+
+      const hotelId = Number(params.get('hotelId'));
+      this.hotelId = Number(params.get('hotelId'));
+
+      console.log('Hotel ID:', hotelId); // DEBUG
+
+      if (!this.hotelId) {
+        console.error('Invalid hotelId');
         this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error(err);
-        this.loading = false;
-        this.cdr.detectChanges();
+        return;
       }
+
+      this.roomService.getRoomsByHotel(this.hotelId).subscribe({
+        next: (res: any) => {
+
+          console.log('Rooms API response:', res);
+
+          this.rooms = Array.isArray(res) ? res : [];
+
+          console.log('Rooms array AFTER assign:', this.rooms); // correct place
+
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Room fetch error:', err);
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
+
     });
   }
 }

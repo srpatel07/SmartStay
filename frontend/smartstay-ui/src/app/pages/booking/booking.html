@@ -1,94 +1,219 @@
 <div class="container py-5">
-  <h2 class="fw-bold mb-4">Booking</h2>
 
-  <!-- LOADING -->
-  <div *ngIf="loading" class="text-center">
-    <div class="spinner-border"></div>
-  </div>
+  <div class="row g-4">
 
-  <!-- DATA -->
-  <div *ngIf="!loading && room" class="card p-4 shadow-sm">
-    <h4 class="fw-bold">{{ room.roomType }}</h4>
-    <p class="text-muted">₹{{ room.pricePerNight }} / night</p>
+    <!-- LEFT: FORM -->
+    <div class="col-lg-7">
 
-    <p>
-      Adults: {{ room.maxAdults }} |
-      Children: {{ room.maxChildren }}
-    </p>
+      <div class="card p-4 shadow-sm border-0 rounded-4">
 
-    <p>
-      Available: {{ room.availableRooms }}
-    </p>
-  </div>
+        <h4 class="fw-bold mb-3">Guest Details</h4>
 
-  <!-- BOOKING FORM -->
-    <div *ngIf="!loading && room" class="card p-4 shadow-sm mt-4">
-        <div class="row g-3 mb-3">
+        <!-- Name -->
+        <input class="form-control mb-3 bg-light text-muted"
+          placeholder="Full Name"
+          [(ngModel)]="guestName"
+          [readonly]="isLoggedIn">
 
-            <div class="col-md-4">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" [(ngModel)]="guestName">
-            </div>
+        <!-- Email -->
+        <input class="form-control mb-3 bg-light text-muted"
+          placeholder="Email"
+          [(ngModel)]="guestEmail"
+          [readonly]="authService.getToken()">
 
-            <div class="col-md-4">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" [(ngModel)]="guestEmail">
-            </div>
+        <!-- Phone -->
+        <input type="text" class="form-control mb-3"
+          placeholder="Phone"
+          [(ngModel)]="guestPhone">
 
-            <div class="col-md-4">
-            <label class="form-label">Phone</label>
-            <input type="text" class="form-control" [(ngModel)]="guestPhone">
-            </div>
+        <hr>
 
-            </div>
+        <h5 class="fw-bold mb-3">Guests & Rooms</h5>
+
+        <div class="row g-2">
+          <div class="col">
+            <label class="small text-muted">Adults</label>
+            <input type="number" class="form-control"
+              [(ngModel)]="adults" min="1">
+          </div>
+
+          <div class="col">
+            <label class="small text-muted">Children</label>
+            <input type="number" class="form-control"
+              [(ngModel)]="children" min="0">
+          </div>
+
+          <div class="col">
+            <label class="small text-muted">Rooms</label>
+            <input type="number"
+              class="form-control"
+              [(ngModel)]="roomsBooked"
+              [max]="room?.availableRooms"
+              min="1">
+          </div>
+        </div>
+
+        <hr>
+
+        <h5 class="fw-bold mb-2">Special Request</h5>
+
+        <textarea class="form-control"
+          rows="2"
+          placeholder="Any special request? (optional)"
+          [(ngModel)]="specialRequest">
+        </textarea>
+
+        <hr>
+
         <h5 class="fw-bold mb-3">Select Dates</h5>
 
-        <div class="row g-3">
-            <div class="col-md-6">
-            <label class="form-label">Check-In</label>
-            <input type="date"
-                    class="form-control"
-                    [(ngModel)]="checkInDate"
-                    [min]="today"
-                    (ngModelChange)="onDateChange()">
-            </div>
+        <!-- Dates -->
+        <div class="row g-2">
+          <div class="col">
+            <input type="date" class="form-control"
+              [(ngModel)]="checkInDate"
+              [min]="today"
+              (change)="onDateChange()">
+          </div>
 
-            <div class="col-md-6">
-            <label class="form-label">Check-Out</label>
-            <input type="date"
-                    class="form-control"
-                    [(ngModel)]="checkOutDate"
-                    [min]="checkInDate || today"
-                    (ngModelChange)="onDateChange()">
-            </div>
+          <div class="col">
+            <input type="date" class="form-control"
+              [(ngModel)]="checkOutDate"
+              [min]="checkInDate || today"
+              (change)="onDateChange()">
+          </div>
         </div>
 
-        <div *ngIf="successMessage" class="alert alert-success mt-3">
-            {{ successMessage }}
-        </div>
+        <!-- Error -->
+          <div *ngIf="room?.availableRooms === 0" class="alert alert-warning mt-3">
+              ❌ No rooms available for this selection
+          </div>
 
-        <div *ngIf="errorMessage" class="alert alert-danger mt-3">
-            {{ errorMessage }}
-        </div>
-
+        <!-- Button -->
         <button 
-            type="button" 
-            class="btn btn-success mt-3 w-100"
-            (click)="bookNow()"
-        >
-            Confirm Booking
+          class="btn book-btn mt-3"
+          (click)="bookNow()"
+          [disabled]="
+          !guestName || !guestEmail || !guestPhone ||
+          !checkInDate || !checkOutDate ||
+          calculateNights() === 0 
+          ">
+          {{ isBooking ? 'Processing...' : 'Confirm Booking' }}
         </button>
+
+            <div class="text-success small mt-2">
+              ✔ Free cancellation<br>
+              ✔ Pay at hotel<br>
+              ✔ Instant confirmation
+            </div>  
+
+        <p class="text-muted text-center mt-2 small">
+          🔒 Your booking is secure and instant confirmation will be provided.
+        </p>
+
+      </div>
+
     </div>
 
-    <!-- SUCCESS MODAL -->
-    <div class="modal-overlay" *ngIf="successMessage">
-      <div class="modal-box text-center">
-       <h4 class="fw-bold mb-3">Success</h4>
-        <p>{{ successMessage }}</p>
+    <!-- RIGHT: SUMMARY -->
+    <div class="col-lg-5">
+      <h6 class="fw-bold mb-3">Your Stay</h6>
 
-        <button class="btn btn-success mt-3" (click)="closeSuccess()">
-          OK
-        </button>
+      <div class="card summary-card border-0 shadow-sm">
+
+        <!-- Image -->
+        <div class="summary-img-wrapper">
+          <img 
+            [src]="room?.thumbnailImageUrl 
+            ? 'https://localhost:7094/' + room.thumbnailImageUrl
+            : 'https://source.unsplash.com/400x300/?hotel-room'"
+          >
+
+          <div class="summary-price-badge">
+            ₹{{ room?.pricePerNight }}/night
+          </div>
+        </div>
+
+        <div class="p-3">
+           <!-- Guests -->
+           <div class="d-flex justify-content-between ">
+              <span>Guests</span>
+              <strong>{{ adults }} Adults, {{ children }} Children</strong>
+            </div>
+
+            <!-- Rooms -->
+            <div class="d-flex justify-content-between mb-1">
+              <span>Rooms</span>
+              <strong>{{ roomsBooked }}</strong>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <span>Nights</span>
+              <strong>{{ calculateNights() }}</strong>
+            </div>
+
+            <!-- Availability -->
+            <div class="d-flex justify-content-between mb-2">
+              <span>Availability</span>
+              <strong 
+                [class.text-danger]="room?.availableRooms < 3"
+                [class.text-warning]="room?.availableRooms >= 3 && room?.availableRooms < 6"
+                >
+                {{ room?.availableRooms }} left
+              </strong>
+            </div>
+
+          <!-- Dates -->
+          <div class="d-flex justify-content-between">
+            <span>Check-In</span>
+            <strong>
+              {{ checkInDate ? (checkInDate | date:'mediumDate') : 'Select date' }}
+            </strong>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <span>Check-Out</span>
+            <strong>{{ checkOutDate ? (checkOutDate | date:'mediumDate') : '-' }}</strong>
+          </div>
+
+          <!-- Nights -->
+          <div class="d-flex justify-content-between">
+            <span>Nights</span>
+            <strong>{{ calculateNights() }}</strong>
+          </div>
+
+          <hr>
+
+          <!-- Total -->          
+          <div class="d-flex justify-content-between mb-2">
+            <span>₹{{ room?.pricePerNight }} × {{ calculateNights() }} nights</span>
+            <span>₹{{ calculateTotal() }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-2 text-muted">
+            <span>Taxes & fees</span>
+            <span>₹0</span>
+          </div>
+          
+          <hr>
+          
+          <div class="d-flex justify-content-between fs-5">
+            <strong>Total</strong>
+            <strong>₹{{ calculateTotal() }}</strong>
+          </div>
+
+        </div>
       </div>
     </div>
+  </div>
 </div>
+
+<!-- MODAL -->
+<app-modal
+  [show]="showModal"
+  [title]="modalTitle"
+  [message]="modalMessage"
+  [type]="modalType"
+  (onConfirm)="handleSuccessConfirm()"
+  (onClose)="closeModal()">
+</app-modal>

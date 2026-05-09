@@ -3,12 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './register.html',
+  styleUrls: ['./register.css']
 })
 export class Register {
 
@@ -27,8 +29,9 @@ export class Register {
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    private router: Router
-  ) {}
+    private router: Router,
+    private authService: AuthService
+  ) { }
 
   register() {
 
@@ -62,9 +65,9 @@ export class Register {
     }
 
     if (!/[A-Z]/.test(this.password) ||
-        !/[a-z]/.test(this.password) ||
-        !/[0-9]/.test(this.password) ||
-        !/[^A-Za-z0-9]/.test(this.password)) {
+      !/[a-z]/.test(this.password) ||
+      !/[0-9]/.test(this.password) ||
+      !/[^A-Za-z0-9]/.test(this.password)) {
 
       this.loading = false;
       this.errorMessage =
@@ -101,11 +104,6 @@ export class Register {
       .subscribe({
         next: (res: any) => {
 
-        const token = res.data?.token;
-
-        if (token) {
-          localStorage.setItem('token', token);
-        }
 
           this.loading = false;
           this.successMessage = "Account created successfully!";
@@ -114,7 +112,7 @@ export class Register {
 
           // redirect after short delay
           setTimeout(() => {
-            window.location.href = '/';
+            this.router.navigate(['/login']);
           }, 1000);
         },
         error: (err) => {
@@ -128,5 +126,10 @@ export class Register {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  logout() {
+    this.authService.logout();
+    console.log('Token after logout:', localStorage.getItem('token')); // debug
   }
 }

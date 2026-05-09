@@ -9,22 +9,65 @@
   <!-- DATA -->
   <div class="row g-4" *ngIf="!loading">
     <div class="col-md-6 col-lg-4" *ngFor="let hotel of hotels">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold">{{ hotel.hotelName }}</h5>
-          <p class="text-muted">{{ hotel.city }}</p>
-          <p>{{ hotel.description }}</p>
+      <div class="card hotel-card h-100 border-0 shadow-sm">
 
-          <a
-            class="btn btn-dark btn-sm"
-            [routerLink]="['/rooms', hotel.hotelId]"
-          >
-            View Rooms
-          </a>
-        </div>
+        <!-- Image -->
+          <div class="hotel-img-wrapper">
+            <img 
+              [src]="hotel.thumbnailImageUrl 
+              ? 'https://localhost:7094/' + hotel.thumbnailImageUrl 
+              : 'https://source.unsplash.com/400x300/?hotel'"
+               alt="hotel image"
+            >
+
+            <!-- Rating badge -->
+              <div class="rating-badge">
+                ⭐ {{ hotel.starRating }}
+              </div>
+
+            <!-- Price badge -->
+              <div class="price-badge">
+                ₹{{ hotel.basePricePerNight }}/night
+              </div>
+          </div>
+
+          <div class="card-body">
+
+        <!-- Title + Rating -->
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold mb-0">
+              {{ hotel.hotelName }}
+            </h5>
+          </div>
+
+        <!-- Location -->
+          <p class="text-muted mb-2">
+            📍 {{ hotel.city }}
+          </p>
+
+        <!-- Description -->
+          <p class="text-sm text-muted mb-3">
+              {{ hotel.description | slice:0:80 }}...
+          </p>
+        <!-- Footer -->
+          <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+              <small class="text-muted">Starting from</small><br>
+              <strong>₹{{ hotel.basePricePerNight }}</strong>
+            </div>
+
+            <a
+              class="btn view-btn"
+              [routerLink]="['/rooms', hotel.hotelId]"
+              >
+              View Rooms
+            </a>
+          </div>
       </div>
     </div>
-  </div>
+   </div>
+ </div>
 
   <!-- EMPTY -->
   <div *ngIf="!loading && hotels.length === 0" class="alert alert-info">

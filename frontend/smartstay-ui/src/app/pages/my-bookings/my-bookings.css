@@ -1,0 +1,44 @@
+.card {
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+/* status badges polish */
+.badge {
+  font-size: 12px;
+  border-radius: 20px;
+}
+
+/* price highlight */
+.card strong {
+  font-size: 16px;
+}
+
+/* subtle divider spacing */
+.card small {
+  font-size: 12px;
+}
+
+/* cancel button */
+.btn-outline-danger {
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* mobile spacing */
+@media (max-width: 576px) {
+  .card {
+    padding: 16px;
+  }
+}

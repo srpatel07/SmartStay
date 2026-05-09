@@ -11,9 +11,9 @@ export class RoomService {
 
   constructor(private http: HttpClient) {}
 
-  getRoomsByHotel(hotelId: number): Observable<any> {
-    return this.http.get(`${this.baseUrl}/hotel/${hotelId}`);
-  } 
+  getRoomsByHotel(hotelId: number) {
+    return this.http.get<any>(`${this.baseUrl}/hotel/${hotelId}`);
+  }
 
   getRoomById(roomId: number): Observable<any> {
     return this.http.get(`${this.baseUrl}/${roomId}`);

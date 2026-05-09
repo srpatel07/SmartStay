@@ -427,3 +427,11 @@ node_modules/
 #folder structure stays in git
 backend/SmartStay.API/wwwroot/profile-images/*
 !backend/SmartStay.API/wwwroot/profile-images/.gitkeep
+
+# Upload folders
+backend/SmartStay.API/wwwroot/uploads/**
+!backend/SmartStay.API/wwwroot/uploads/.gitkeep
+!backend/SmartStay.API/wwwroot/uploads/hotels/
+!backend/SmartStay.API/wwwroot/uploads/hotels/.gitkeep
+!backend/SmartStay.API/wwwroot/uploads/rooms/
+!backend/SmartStay.API/wwwroot/uploads/rooms/.gitkeep

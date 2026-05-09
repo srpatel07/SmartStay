@@ -1,47 +1,41 @@
-<div class="container py-5" style="max-width: 400px;">
-  <h3 class="fw-bold mb-4 text-center">Login</h3>
+<div class="auth-wrapper">
+    <div class="auth-card">
 
-    <input type="email"
-       class="form-control mb-3"
-       placeholder="Email"
-       [(ngModel)]="email">
+        <div class="brand">SmartStay</div>
 
-    <div class="position-relative mb-3">
+        <h2 class="title">Login</h2>
+        <p class="subtitle">Login to continue booking</p>
 
-    <input [type]="showPassword ? 'text' : 'password'"
-         class="form-control pe-5"
-         placeholder="Password"
-         [(ngModel)]="password">
+        <input type="email" class="input" placeholder="Email" [(ngModel)]="email">
 
-    <i class="bi"
-     [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"
-     (click)="showPassword = !showPassword"
-     style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer;">
-    </i>
+        <div class="input-group">
+            <input [type]="showPassword ? 'text' : 'password'" class="input" placeholder="Password"
+                [(ngModel)]="password">
 
-    </div>
+            <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'" (click)="showPassword = !showPassword">
+            </i>
+        </div>
 
-    <div class="text-danger mt-1" *ngIf="password && password.length < 8">
-        Password must be at least 8 characters
-    </div>
+        <div class="error" *ngIf="password && password.length < 8">
+            Password must be at least 8 characters
+        </div>
 
-    <div *ngIf="loading" class="text-center mb-2">
-        <small>Checking credentials...</small>
-    </div>
+        <button class="btn-primary" (click)="login()" [disabled]="loading">
 
-    <button class="btn btn-dark w-100" (click)="login()" [disabled]="loading">
-        {{ loading ? 'Logging in...' : 'Login' }}
-    </button>
+            {{ loading ? 'Logging in...' : 'Login' }}
+        </button>
 
-    <div class="text-center mt-3">
-        <a routerLink="/register">Create new account</a>
-    </div>
+        <div class="link">
+            <a routerLink="/register">Create account</a>
+        </div>
 
-    <div *ngIf="successMessage" class="alert alert-success mt-3">
-        {{ successMessage }}
-    </div>
+        <div *ngIf="errorMessage" class="alert error-box">
+            {{ errorMessage }}
+        </div>
 
-    <div *ngIf="errorMessage" class="alert alert-danger mt-3">
-        {{ errorMessage }}
+        <div *ngIf="successMessage" class="alert success-box">
+            {{ successMessage }}
+        </div>
+
     </div>
 </div>

@@ -1,1 +1,27 @@
+<nav class="navbar">
+
+  <div class="logo" routerLink="/">SmartStay</div>
+
+  <div class="links">
+
+    <!-- NOT LOGGED IN -->
+    <ng-container *ngIf="!isLoggedIn; else loggedInBlock">
+      <a routerLink="/login">Login</a>
+      <a routerLink="/register">Register</a>
+    </ng-container>
+
+    <!-- LOGGED IN -->
+    <ng-template #loggedInBlock>
+      <a *ngIf="auth.getUserRole() === 'Admin'" routerLink="/admin">
+        Admin
+      </a>
+      <a routerLink="/my-bookings">My Bookings</a>
+      <button (click)="logout()">Logout</button>
+    </ng-template>
+
+  </div>
+
+</nav>
+
+<!-- ROUTES -->
 <router-outlet></router-outlet>

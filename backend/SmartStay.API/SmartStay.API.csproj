@@ -17,6 +17,8 @@
   <ItemGroup>
     <Folder Include="Helpers\" />
     <Folder Include="wwwroot\profile-images\" />
+    <Folder Include="wwwroot\uploads\hotels\" />
+    <Folder Include="wwwroot\uploads\rooms\" />
   </ItemGroup>
 
 </Project>
