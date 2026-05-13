@@ -12,7 +12,7 @@
 
     <!-- LOGGED IN -->
     <ng-template #loggedInBlock>
-      <a *ngIf="auth.getUserRole() === 'Admin'" routerLink="/admin">
+      <a *ngIf="isLoggedIn && auth.getUserRole() === 'Admin'" routerLink="/admin">
         Admin
       </a>
       <a routerLink="/my-bookings">My Bookings</a>

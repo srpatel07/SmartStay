@@ -36,19 +36,193 @@
     <div class="mt-5">
         <h4 class="mb-3">Quick Actions</h4>
 
-        <button class="btn btn-dark me-2">Add Hotel</button>
-        <button class="btn btn-outline-dark me-2">Manage Rooms</button>
-        <button class="btn btn-outline-dark">View Bookings</button>
+        <button class="btn btn-dark me-2" (click)="openAddHotelForm()">
+            {{ showHotelForm ? 'Close Form' : 'Add Hotel' }}
+        </button>
+        <button class="btn btn-outline-dark me-2" (click)="loadHotels()">
+            Manage Hotels
+        </button>
+        <button class="btn btn-outline-dark" (click)="showRecentBookings()">
+            {{ bookingView === 'recent' ? 'Hide Recent Bookings' : 'View Recent Bookings' }}
+        </button>
+
+        <button class="btn btn-outline-primary ms-2" [disabled]="bookingLoading" (click)="loadAllBookings()">
+            {{ bookingLoading ? 'Loading...' : 'View All Bookings' }}
+        </button>
     </div>
 
-    <div class="mt-5">
-        <h4 class="mb-3">All Bookings</h4>
+    <div class="card p-4 shadow-sm mt-4" *ngIf="showHotelForm">
+        <h4 class="mb-3">
+            {{ isEditMode ? 'Edit Hotel' : 'Add New Hotel' }}
+        </h4>
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Hotel Name</label>
+                <input class="form-control" name="hotelName" [(ngModel)]="newHotel.hotelName">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Hotel Code</label>
+                <input class="form-control" [(ngModel)]="newHotel.hotelCode">
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" rows="3" name="description" placeholder="Enter short hotel description"
+                    [(ngModel)]="newHotel.description" [ngModelOptions]="{ updateOn: 'blur' }">
+                </textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">City</label>
+                <input class="form-control" [(ngModel)]="newHotel.city">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">State</label>
+                <input class="form-control" [(ngModel)]="newHotel.state">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Country</label>
+                <input class="form-control" [(ngModel)]="newHotel.country">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Address Line 1</label>
+                <input class="form-control" [(ngModel)]="newHotel.addressLine1">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Address Line 2</label>
+                <input class="form-control" [(ngModel)]="newHotel.addressLine2">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Postal Code</label>
+                <input class="form-control" [(ngModel)]="newHotel.postalCode">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Star Rating</label>
+                <input type="number" class="form-control" [(ngModel)]="newHotel.starRating">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Base Price</label>
+                <input type="number" class="form-control" [(ngModel)]="newHotel.basePricePerNight">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Thumbnail Path</label>
+                <input class="form-control" placeholder="uploads/hotels/image.jpg"
+                    [(ngModel)]="newHotel.thumbnailImageUrl">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Contact Email</label>
+                <input class="form-control" [(ngModel)]="newHotel.contactEmail">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Contact Phone</label>
+                <input class="form-control" [(ngModel)]="newHotel.contactPhone">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Check-In Time</label>
+                <input type="time" class="form-control" [(ngModel)]="newHotel.checkInTime">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Check-Out Time</label>
+                <input type="time" class="form-control" [(ngModel)]="newHotel.checkOutTime">
+            </div>
+
+        </div>
+
+        <button class="btn btn-success mt-4" [disabled]="hotelLoading" (click)="saveHotel()">
+            {{ hotelLoading ? 'Saving...' : (isEditMode ? 'Update Hotel' : 'Save Hotel') }}
+        </button>
+
+        <button class="btn btn-outline-secondary mt-4 ms-2" (click)="cancelHotelForm()">
+            Cancel
+        </button>
+    </div>
+
+    <div *ngIf="hotelMessage" class="alert mt-4" [ngClass]="{
+      'alert-success': hotelMessageType === 'success',
+      'alert-danger': hotelMessageType === 'error'
+     }">
+
+        {{ hotelMessage }}
+
+    </div>
+
+    <div class="mt-5" *ngIf="showHotels">
+        <h4 class="mb-3">Manage Hotels</h4>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>No.</th>
+                        <th>Hotel</th>
+                        <th>City</th>
+                        <th>Country</th>
+                        <th>Rating</th>
+                        <th>Base Price</th>
+                        <th>Active</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let h of hotels; let i = index">
+                        <td>{{ i + 1 }}</td>
+                        <td>{{ h.hotelName }}</td>
+                        <td>{{ h.city }}</td>
+                        <td>{{ h.country }}</td>
+                        <td>{{ h.starRating }}</td>
+                        <td>₹{{ h.basePricePerNight }}</td>
+                        <td>{{ h.isActive ? 'Yes' : 'No' }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-dark me-2" (click)="editHotel(h)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger" (click)="removeHotel(h.hotelId)">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="hotels.length === 0">
+                        <td colspan="7" class="text-center">No hotels found</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-5" *ngIf="bookingView !== 'none' && !showHotelForm && !showHotels">
+        <h4 class="mb-3">
+            {{ bookingView === 'all' ? 'All Bookings' : 'Recent Bookings' }}
+            ({{ getCurrentBookings().length }})
+        </h4>
+
+        <div class="alert alert-info" *ngIf="bookingLoading">
+            Loading bookings...
+        </div>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle">
 
                 <thead class="table-dark">
                     <tr>
+                        <th>No.</th>
                         <th>Guest</th>
                         <th>Email</th>
                         <th>Hotel</th>
@@ -63,9 +237,10 @@
 
                 <tbody>
 
-                    <tr *ngFor="let b of bookings">
+                    <tr *ngFor="let b of getCurrentBookings(); let i = index">
+                        <td>{{ i + 1 }}</td>
                         <td>{{ b.guestName }}</td>
-                        <td>{{ b.guestEmail }}</td>
+                        <td>{{ b.guestEmail || '-' }}</td>
                         <td>{{ b.hotelName }}</td>
                         <td>{{ b.roomType }}</td>
 
@@ -78,11 +253,11 @@
                         <!-- BOOKING STATUS -->
                         <td>
                             <span class="badge" [ngClass]="{
-    'bg-success': b.bookingStatus === 'Confirmed',
-    'bg-warning text-dark': b.bookingStatus === 'Pending',
-    'bg-danger': b.bookingStatus === 'Cancelled',
-    'bg-primary': b.bookingStatus === 'Completed'
-  }">
+                                'bg-success': b.bookingStatus === 'Confirmed',
+                                'bg-warning text-dark': b.bookingStatus === 'Pending',
+                                'bg-danger': b.bookingStatus === 'Cancelled',
+                                'bg-primary': b.bookingStatus === 'Completed'
+                                }">
                                 {{ b.bookingStatus }}
                             </span>
                         </td>
@@ -97,8 +272,8 @@
                                 Confirm
                             </button>
 
-                            <button class="btn btn-sm btn-danger" *ngIf="b.bookingStatus !== 'Cancelled'"
-                                [disabled]="updatingId === b.bookingId"
+                            <button class="btn btn-sm btn-danger" *ngIf="b.bookingStatus !== 'Cancelled' 
+                                && b.bookingStatus !== 'Completed'" [disabled]="updatingId === b.bookingId"
                                 (click)="updateStatus(b.bookingId, 'Cancelled')">
                                 Cancel
                             </button>
@@ -117,7 +292,8 @@
                         </td>
 
                         <!-- PAYMENT ACTION -->
-                        <td>
+                        <td *ngIf="b.bookingStatus !== 'Completed'; else noPaymentAction">
+
                             <select class="form-select form-select-sm" [disabled]="updatingId === b.bookingId"
                                 (change)="updatePayment(b.bookingId, $any($event.target).value)">
 
@@ -128,9 +304,15 @@
 
                             </select>
                         </td>
+
+                        <ng-template #noPaymentAction>
+                            <td>
+                                <span class="text-muted">No Action</span>
+                            </td>
+                        </ng-template>
                     </tr>
 
-                    <tr *ngIf="bookings.length === 0">
+                    <tr *ngIf="getCurrentBookings().length === 0">
                         <td colspan="6" class="text-center">No bookings found</td>
                     </tr>
 

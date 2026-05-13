@@ -1,0 +1,22 @@
+.card {
+  border: none;
+  border-radius: 14px;
+}
+
+.card h5 {
+  color: #475569;
+  font-size: 15px;
+}
+
+.card h3 {
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.table {
+  background: #fff;
+}
+
+.badge {
+  padding: 7px 10px;
+}

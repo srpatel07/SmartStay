@@ -1,27 +1,69 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../services/dashboard.service';
 import { BookingService } from '../../services/booking.service';
+import { FormsModule } from '@angular/forms';
+import { HotelService } from '../../services/hotel.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin.html',
+  styleUrls: ['./admin.css']
 })
 export class Admin implements OnInit {
+
+  showHotelForm = false;
+  showBookings = false;
+  hotelLoading = false;
+  hotelMessage = '';
+  hotelMessageType: 'success' | 'error' = 'success';
+
+  newHotel = {
+    hotelName: '',
+    hotelCode: '',
+    description: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    country: 'India',
+    postalCode: '',
+    latitude: 0,
+    longitude: 0,
+    starRating: 5,
+    basePricePerNight: 0,
+    thumbnailImageUrl: '',
+    contactEmail: '',
+    contactPhone: '',
+    checkInTime: '12:00',
+    checkOutTime: '10:00'
+  };
 
   totalHotels = 0;
   totalRooms = 0;
   totalBookings = 0;
   totalRevenue = 0;
 
-  bookings: any[] = [];
+  recentBookings: any[] = [];
+  allBookings: any[] = [];
+  bookingView: 'none' | 'recent' | 'all' = 'none';
+  bookingLoading = false;
   updatingId: number | null = null;
+
+  hotels: any[] = [];
+  showHotels = false;
+  editingHotelId: number | null = null;
+  isEditMode = false;
 
   constructor(
     private dashboardService: DashboardService,
-    private bookingService: BookingService
+    private bookingService: BookingService,
+    private hotelService: HotelService,
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -45,9 +87,58 @@ export class Admin implements OnInit {
     // Recent bookings
     this.dashboardService.getRecentBookings().subscribe({
       next: (res: any) => {
-        this.bookings = res?.data || [];
+        this.recentBookings = res?.data || [];
       }
     });
+  }
+
+  loadAllBookings() {
+    this.zone.run(() => {
+      this.bookingLoading = true;
+      this.bookingView = 'all';
+      this.showHotels = false;
+      this.showHotelForm = false;
+      this.cdr.detectChanges();
+    });
+
+    this.bookingService.getAllBookings().subscribe({
+      next: (res: any) => {
+        const list = res?.data || res || [];
+
+        this.allBookings = list.map((b: any) => ({
+          bookingId: b.BookingId,
+          guestName: b.GuestName,
+          guestEmail: b.GuestEmail,
+          hotelName: b.HotelName || b.HotelId,
+          roomType: b.RoomType || b.RoomId,
+          checkInDate: b.CheckInDate,
+          checkOutDate: b.CheckOutDate,
+          bookingStatus: b.BookingStatus,
+          paymentStatus: b.PaymentStatus
+        }));
+
+        this.zone.run(() => {
+          this.bookingLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('All bookings fetch failed', err);
+        this.bookingLoading = false;
+      }
+    });
+  }
+
+  showRecentBookings() {
+    this.bookingView = this.bookingView === 'recent' ? 'none' : 'recent';
+    this.showHotels = false;
+    this.showHotelForm = false;
+  }
+
+  getCurrentBookings(): any[] {
+    return this.bookingView === 'all'
+      ? this.allBookings
+      : this.recentBookings;
   }
 
   updateStatus(id: number, status: string) {
@@ -55,7 +146,7 @@ export class Admin implements OnInit {
 
     this.bookingService.updateBookingStatus(id, status).subscribe({
       next: () => {
-        const booking = this.bookings.find(b => b.bookingId === id);
+        const booking = this.getCurrentBookings().find((b: any) => b.bookingId === id);
 
         if (booking) {
           booking.bookingStatus = status;
@@ -75,7 +166,7 @@ export class Admin implements OnInit {
 
     this.bookingService.updatePaymentStatus(id, status).subscribe({
       next: () => {
-        const booking = this.bookings.find(b => b.bookingId === id);
+        const booking = this.getCurrentBookings().find((b: any) => b.bookingId === id);
 
         if (booking) {
           booking.paymentStatus = status;
@@ -86,6 +177,219 @@ export class Admin implements OnInit {
       error: (err) => {
         console.error('Payment update failed', err);
         this.updatingId = null;
+      }
+    });
+  }
+
+
+
+  // Hotel
+  loadHotels() {
+    this.zone.run(() => {
+      this.showHotels = true;
+      this.bookingView = 'none';
+      this.showHotelForm = false;
+    });
+
+    this.hotelService.getAllHotels().subscribe({
+      next: (res: any) => {
+        this.zone.run(() => {
+          this.hotels = res?.data || res || [];
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('Hotels fetch failed', err);
+      }
+    });
+  }
+
+  editHotel(h: any) {
+    this.isEditMode = true;
+    this.editingHotelId = h.hotelId;
+    this.showHotelForm = true;
+    this.showHotels = false;
+    this.bookingView = 'none';
+
+    this.newHotel = {
+      hotelName: h.hotelName || '',
+      hotelCode: h.hotelCode || '',
+      description: h.description || '',
+      addressLine1: h.addressLine1 || '',
+      addressLine2: h.addressLine2 || '',
+      city: h.city || '',
+      state: h.state || '',
+      country: h.country || 'India',
+      postalCode: h.postalCode || '',
+      latitude: h.latitude || 0,
+      longitude: h.longitude || 0,
+      starRating: h.starRating || 5,
+      basePricePerNight: h.basePricePerNight || 0,
+      thumbnailImageUrl: h.thumbnailImageUrl || '',
+      contactEmail: h.contactEmail || '',
+      contactPhone: h.contactPhone || '',
+      checkInTime: h.checkInTime || '12:00',
+      checkOutTime: h.checkOutTime || '10:00'
+    };
+  }
+
+  saveHotel() {
+
+    this.hotelMessage = '';
+
+    const payload = {
+      ...this.newHotel,
+      checkInTime: this.newHotel.checkInTime + ':00',
+      checkOutTime: this.newHotel.checkOutTime + ':00'
+    };
+
+    if (!this.newHotel.hotelName || !this.newHotel.city) {
+      this.hotelMessageType = 'error';
+      this.hotelMessage = 'Hotel name and city are required';
+      return;
+    }
+
+    this.hotelLoading = true;
+
+    const request$ = this.isEditMode && this.editingHotelId
+      ? this.hotelService.updateHotel(this.editingHotelId, {
+        ...payload,
+        hotelId: this.editingHotelId,
+        isActive: true
+      })
+      : this.hotelService.createHotel(payload);
+
+    request$.subscribe({
+      next: (res: any) => {
+        this.zone.run(() => {
+          this.hotelLoading = false;
+          this.hotelMessageType = 'success';
+          this.hotelMessage =
+            res?.message || (this.isEditMode ? 'Hotel updated successfully' : 'Hotel added successfully');
+        });
+
+        this.newHotel = {
+          hotelName: '',
+          hotelCode: '',
+          description: '',
+          addressLine1: '',
+          addressLine2: '',
+          city: '',
+          state: '',
+          country: 'India',
+          postalCode: '',
+          latitude: 0,
+          longitude: 0,
+          starRating: 5,
+          basePricePerNight: 0,
+          thumbnailImageUrl: '',
+          contactEmail: '',
+          contactPhone: '',
+          checkInTime: '12:00',
+          checkOutTime: '10:00'
+        };
+
+        this.loadDashboard();
+        this.showHotelForm = false;
+        this.isEditMode = false;
+        this.editingHotelId = null;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.hotelMessage = '';
+        }, 4000);
+      },
+      error: (err) => {
+        console.error('HOTEL CREATE ERROR:', err);
+
+        this.hotelLoading = false;
+        this.hotelMessageType = 'error';
+        this.hotelMessage =
+          err.error?.message ||
+          err.error?.errors?.[0] ||
+          'Failed to add hotel';
+      }
+    });
+  }
+
+  openAddHotelForm() {
+
+    this.isEditMode = false;
+    this.editingHotelId = null;
+
+    this.newHotel = {
+      hotelName: '',
+      hotelCode: '',
+      description: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      country: 'India',
+      postalCode: '',
+      latitude: 0,
+      longitude: 0,
+      starRating: 5,
+      basePricePerNight: 0,
+      thumbnailImageUrl: '',
+      contactEmail: '',
+      contactPhone: '',
+      checkInTime: '12:00',
+      checkOutTime: '10:00'
+    };
+
+    this.showHotelForm = !this.showHotelForm;
+  }
+
+  cancelHotelForm() {
+  this.showHotelForm = false;
+  this.isEditMode = false;
+  this.editingHotelId = null;
+  this.hotelMessage = '';
+
+  this.newHotel = {
+    hotelName: '',
+    hotelCode: '',
+    description: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    country: 'India',
+    postalCode: '',
+    latitude: 0,
+    longitude: 0,
+    starRating: 5,
+    basePricePerNight: 0,
+    thumbnailImageUrl: '',
+    contactEmail: '',
+    contactPhone: '',
+    checkInTime: '12:00',
+    checkOutTime: '10:00'
+  };
+}
+
+  removeHotel(id: number) {
+    if (!confirm('Are you sure you want to remove this hotel?')) {
+      return;
+    }
+
+    this.hotelService.deleteHotel(id).subscribe({
+      next: (res: any) => {
+        this.hotelMessageType = 'success';
+        this.hotelMessage = res?.message || 'Hotel removed successfully';
+
+        this.loadHotels();
+        this.loadDashboard();
+
+        setTimeout(() => {
+          this.hotelMessage = '';
+        }, 3000);
+      },
+      error: (err) => {
+        this.hotelMessageType = 'error';
+        this.hotelMessage =
+          err.error?.message || 'Failed to remove hotel';
       }
     });
   }
