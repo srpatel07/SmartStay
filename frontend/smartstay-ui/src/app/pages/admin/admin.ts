@@ -4,7 +4,9 @@ import { DashboardService } from '../../services/dashboard.service';
 import { BookingService } from '../../services/booking.service';
 import { FormsModule } from '@angular/forms';
 import { HotelService } from '../../services/hotel.service';
+import { RoomService } from '../../services/room.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -58,12 +60,37 @@ export class Admin implements OnInit {
   editingHotelId: number | null = null;
   isEditMode = false;
 
+  rooms: any[] = [];
+  showRooms = false;
+  selectedHotelId: number = 0;
+
+  showRoomForm = false;
+  roomLoading = false;
+  roomMessage = '';
+  roomMessageType: 'success' | 'error' = 'success';
+
+  newRoom = {
+    hotelId: 0,
+    roomType: '',
+    description: '',
+    pricePerNight: 0,
+    maxAdults: 1,
+    maxChildren: 0,
+    totalRooms: 1,
+    availableRooms: 1,
+    thumbnailImageUrl: ''
+  };
+
+  editingRoomId: number | null = null;
+  isRoomEditMode = false;
+
   constructor(
     private dashboardService: DashboardService,
     private bookingService: BookingService,
     private hotelService: HotelService,
     private cdr: ChangeDetectorRef,
-    private zone: NgZone
+    private zone: NgZone,
+    private roomService: RoomService
   ) { }
 
   ngOnInit(): void {
@@ -342,32 +369,32 @@ export class Admin implements OnInit {
   }
 
   cancelHotelForm() {
-  this.showHotelForm = false;
-  this.isEditMode = false;
-  this.editingHotelId = null;
-  this.hotelMessage = '';
+    this.showHotelForm = false;
+    this.isEditMode = false;
+    this.editingHotelId = null;
+    this.hotelMessage = '';
 
-  this.newHotel = {
-    hotelName: '',
-    hotelCode: '',
-    description: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    country: 'India',
-    postalCode: '',
-    latitude: 0,
-    longitude: 0,
-    starRating: 5,
-    basePricePerNight: 0,
-    thumbnailImageUrl: '',
-    contactEmail: '',
-    contactPhone: '',
-    checkInTime: '12:00',
-    checkOutTime: '10:00'
-  };
-}
+    this.newHotel = {
+      hotelName: '',
+      hotelCode: '',
+      description: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      country: 'India',
+      postalCode: '',
+      latitude: 0,
+      longitude: 0,
+      starRating: 5,
+      basePricePerNight: 0,
+      thumbnailImageUrl: '',
+      contactEmail: '',
+      contactPhone: '',
+      checkInTime: '12:00',
+      checkOutTime: '10:00'
+    };
+  }
 
   removeHotel(id: number) {
     if (!confirm('Are you sure you want to remove this hotel?')) {
@@ -390,6 +417,166 @@ export class Admin implements OnInit {
         this.hotelMessageType = 'error';
         this.hotelMessage =
           err.error?.message || 'Failed to remove hotel';
+      }
+    });
+  }
+
+  openManageRooms() {
+    this.showRooms = true;
+    this.showHotels = false;
+    this.showHotelForm = false;
+    this.bookingView = 'none';
+
+    this.selectedHotelId = 0;
+    this.rooms = [];
+    this.hotels = []; // reset first
+
+    this.roomMessage = '';
+    this.roomLoading = false;
+
+    this.hotelService.getAllHotels().subscribe({
+      next: (res: any) => {
+        this.zone.run(() => {
+          this.hotels = res?.data || res || [];
+          this.cdr.detectChanges(); // IMPORTANT
+        });
+      },
+      error: (err) => {
+        console.error('Hotels fetch failed', err);
+      }
+    });
+  }
+
+  loadRoomsByHotel() {
+    if (!this.selectedHotelId) return;
+
+    this.rooms = []; // reset first
+
+    this.roomService.getRoomsByHotel(this.selectedHotelId).subscribe({
+      next: (res: any) => {
+        this.zone.run(() => {
+          this.rooms = res?.data || res || [];
+          this.cdr.detectChanges(); // IMPORTANT
+        });
+      },
+      error: (err) => {
+        console.error('Rooms fetch failed', err);
+      }
+    });
+  }
+
+  saveRoom() {
+    this.roomMessage = '';
+
+    if (!this.selectedHotelId) {
+      this.roomMessageType = 'error';
+      this.roomMessage = 'Please select hotel first';
+      return;
+    }
+
+    if (!this.newRoom.roomType || this.newRoom.pricePerNight <= 0) {
+      this.roomMessageType = 'error';
+      this.roomMessage = 'Room type and price are required';
+      return;
+    }
+
+    this.roomLoading = true;
+
+    const payload = {
+      ...this.newRoom,
+      hotelId: this.selectedHotelId
+    };
+
+    const request$ = this.isRoomEditMode && this.editingRoomId
+      ? this.roomService.updateRoom(this.editingRoomId, {
+        ...payload,
+        roomId: this.editingRoomId,
+        isActive: true
+      })
+      : this.roomService.createRoom(payload);
+
+    request$
+      .pipe(
+        finalize(() => {
+          this.zone.run(() => {
+            this.roomLoading = false;
+            this.cdr.detectChanges();
+          });
+        })
+      )
+      .subscribe({
+        next: (res: any) => {
+          this.zone.run(() => {
+            this.roomMessageType = 'success';
+            this.roomMessage =
+              res?.message || (this.isRoomEditMode ? 'Room updated successfully' : 'Room added successfully');
+
+            this.showRoomForm = false;
+            this.isRoomEditMode = false;
+            this.editingRoomId = null;
+
+            this.newRoom = {
+              hotelId: 0,
+              roomType: '',
+              description: '',
+              pricePerNight: 0,
+              maxAdults: 1,
+              maxChildren: 0,
+              totalRooms: 1,
+              availableRooms: 1,
+              thumbnailImageUrl: ''
+            };
+
+            this.loadRoomsByHotel();
+            this.loadDashboard();
+          });
+        },
+        error: (err) => {
+          this.roomMessageType = 'error';
+          this.roomMessage = err.error?.message || 'Room save failed';
+        }
+      });
+  }
+
+  editRoom(r: any) {
+    this.isRoomEditMode = true;
+    this.editingRoomId = r.roomId;
+    this.showRoomForm = true;
+
+    this.newRoom = {
+      hotelId: this.selectedHotelId,
+      roomType: r.roomType,
+      description: r.description,
+      pricePerNight: r.pricePerNight,
+      maxAdults: r.maxAdults,
+      maxChildren: r.maxChildren,
+      totalRooms: r.totalRooms,
+      availableRooms: r.availableRooms,
+      thumbnailImageUrl: r.thumbnailImageUrl
+    };
+  }
+
+  removeRoom(id: number) {
+    if (!confirm('Are you sure you want to remove this room?')) {
+      return;
+    }
+
+    this.roomService.deleteRoom(id).subscribe({
+      next: (res: any) => {
+        this.roomMessageType = 'success';
+        this.roomMessage = res?.message || 'Room removed successfully';
+
+        this.loadRoomsByHotel();
+        this.loadDashboard();
+
+        setTimeout(() => {
+          this.roomMessage = '';
+        }, 3000);
+      },
+      error: (err) => {
+        this.roomMessageType = 'error';
+        this.roomMessage =
+          err.error?.message || 'Failed to remove room';
       }
     });
   }

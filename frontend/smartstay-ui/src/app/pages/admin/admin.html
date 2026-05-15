@@ -42,6 +42,9 @@
         <button class="btn btn-outline-dark me-2" (click)="loadHotels()">
             Manage Hotels
         </button>
+        <button class="btn btn-outline-dark me-2" (click)="openManageRooms()">
+            Manage Rooms
+        </button>
         <button class="btn btn-outline-dark" (click)="showRecentBookings()">
             {{ bookingView === 'recent' ? 'Hide Recent Bookings' : 'View Recent Bookings' }}
         </button>
@@ -156,9 +159,132 @@
       'alert-success': hotelMessageType === 'success',
       'alert-danger': hotelMessageType === 'error'
      }">
-
         {{ hotelMessage }}
+    </div>
 
+    <div class="mt-5" *ngIf="showRooms">
+        <h4 class="mb-3">Manage Rooms</h4>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label class="form-label">Select Hotel</label>
+
+                <select class="form-select" [(ngModel)]="selectedHotelId" (change)="loadRoomsByHotel()">
+
+                    <option [ngValue]="0">Select hotel</option>
+
+                    <option *ngFor="let h of hotels" [ngValue]="h.hotelId">
+                        {{ h.hotelName }} - {{ h.city }}
+                    </option>
+
+                </select>
+            </div>
+            <button class="btn btn-dark mt-3 mb-4" *ngIf="selectedHotelId"
+                (click)="roomMessage = ''; showRoomForm = !showRoomForm">
+                {{ showRoomForm ? 'Close Room Form' : 'Add Room' }}
+            </button>
+        </div>
+
+        <div class="card p-4 shadow-sm mb-4" *ngIf="showRoomForm">
+            <h5 class="mb-3">Add Room</h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="form-label">Room Type</label>
+                    <input class="form-control" [(ngModel)]="newRoom.roomType">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Price Per Night</label>
+                    <input type="number" class="form-control" [(ngModel)]="newRoom.pricePerNight">
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="2" [(ngModel)]="newRoom.description"></textarea>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Max Adults</label>
+                    <input type="number" class="form-control" [(ngModel)]="newRoom.maxAdults">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Max Children</label>
+                    <input type="number" class="form-control" [(ngModel)]="newRoom.maxChildren">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Total Rooms</label>
+                    <input type="number" class="form-control" [(ngModel)]="newRoom.totalRooms">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Available Rooms</label>
+                    <input type="number" class="form-control" [(ngModel)]="newRoom.availableRooms">
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Thumbnail Path</label>
+                    <input class="form-control" placeholder="uploads/rooms/deluxe.jpg"
+                        [(ngModel)]="newRoom.thumbnailImageUrl">
+                </div>
+
+            </div>
+
+            <button class="btn btn-success mt-4" [disabled]="roomLoading" (click)="saveRoom()">
+                {{ roomLoading ? 'Saving...' : (isRoomEditMode ? 'Update Room' : 'Add Room') }}
+            </button>
+
+        </div>
+
+        <div class="alert mt-3" *ngIf="roomMessage" [ngClass]="{
+            'alert-success': roomMessageType === 'success',
+            'alert-danger': roomMessageType === 'error'
+            }">
+            {{ roomMessage }}
+        </div>
+        <div class="table-responsive" *ngIf="selectedHotelId">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>No.</th>
+                        <th>Room Type</th>
+                        <th>Price</th>
+                        <th>Capacity</th>
+                        <th>Total</th>
+                        <th>Available</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let r of rooms; let i = index">
+                        <td>{{ i + 1 }}</td>
+                        <td>{{ r.roomType }}</td>
+                        <td>₹{{ r.pricePerNight }}</td>
+                        <td>{{ r.maxAdults }} Adults, {{ r.maxChildren }} Children</td>
+                        <td>{{ r.totalRooms }}</td>
+                        <td>{{ r.availableRooms }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-dark me-2"
+                                (click)="editRoom(r)">
+                                    Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger" (click)="removeRoom(r.roomId)">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="rooms.length === 0">
+                        <td colspan="7" class="text-center">No rooms found</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="mt-5" *ngIf="showHotels">
